@@ -8,7 +8,12 @@ import (
 	"github.com/mitchellh/colorstring"
 )
 
-// Test that a root level data source gets a special plan output on create
+var disabledColorize = &colorstring.Colorize{
+	Colors:  colorstring.DefaultColors,
+	Disable: true,
+}
+
+// Test that deposed instances are marked as such
 func TestPlan_destroyDeposed(t *testing.T) {
 	plan := &terraform.Plan{
 		Diff: &terraform.Diff{
@@ -24,16 +29,8 @@ func TestPlan_destroyDeposed(t *testing.T) {
 			},
 		},
 	}
-	opts := &PlanOpts{
-		Plan: plan,
-		Color: &colorstring.Colorize{
-			Colors:  colorstring.DefaultColors,
-			Disable: true,
-		},
-		ModuleDepth: 1,
-	}
-
-	actual := Plan(opts)
+	dispPlan := NewPlan(plan)
+	actual := dispPlan.Format(disabledColorize)
 
 	expected := strings.TrimSpace(`
 - aws_instance.foo (deposed)
@@ -64,16 +61,8 @@ func TestPlan_displayInterpolations(t *testing.T) {
 			},
 		},
 	}
-	opts := &PlanOpts{
-		Plan: plan,
-		Color: &colorstring.Colorize{
-			Colors:  colorstring.DefaultColors,
-			Disable: true,
-		},
-		ModuleDepth: 1,
-	}
-
-	out := Plan(opts)
+	dispPlan := NewPlan(plan)
+	out := dispPlan.Format(disabledColorize)
 	lines := strings.Split(out, "\n")
 	if len(lines) != 2 {
 		t.Fatal("expected 2 lines of output, got:\n", out)
@@ -108,16 +97,8 @@ func TestPlan_rootDataSource(t *testing.T) {
 			},
 		},
 	}
-	opts := &PlanOpts{
-		Plan: plan,
-		Color: &colorstring.Colorize{
-			Colors:  colorstring.DefaultColors,
-			Disable: true,
-		},
-		ModuleDepth: 1,
-	}
-
-	actual := Plan(opts)
+	dispPlan := NewPlan(plan)
+	actual := dispPlan.Format(disabledColorize)
 
 	expected := strings.TrimSpace(`
  <= data.type.name
@@ -149,16 +130,8 @@ func TestPlan_nestedDataSource(t *testing.T) {
 			},
 		},
 	}
-	opts := &PlanOpts{
-		Plan: plan,
-		Color: &colorstring.Colorize{
-			Colors:  colorstring.DefaultColors,
-			Disable: true,
-		},
-		ModuleDepth: 2,
-	}
-
-	actual := Plan(opts)
+	dispPlan := NewPlan(plan)
+	actual := dispPlan.Format(disabledColorize)
 
 	expected := strings.TrimSpace(`
  <= module.nested.data.type.name
